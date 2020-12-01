@@ -4,6 +4,8 @@ import os
 import getpass
 import requests
 
+access_token = get_access_token()
+
 def get_page_and_client():
     token_v2 = input("Enter token_v2: ")
     url = input("Enter Notion page URL: ")
@@ -25,14 +27,14 @@ def get_courses():
     url = "https://api-materials.doc.ic.ac.uk/courses/2021"
     headers = {}
     headers["Accept"] = "application/json"
-    headers["Authorization"] = "Bearer " + get_access_token()
+    headers["Authorization"] = "Bearer " + access_token
     return requests.get(url, headers=headers).json()
 
 def get_materials(code):
     url = "https://api-materials.doc.ic.ac.uk/resources?year=2021&course=" + code
     headers = {}
     headers["Accept"] = "application/json"
-    headers["Authorization"] = "Bearer " + get_access_token()
+    headers["Authorization"] = "Bearer " + access_token
     return requests.get(url, headers=headers).json()
 
 def get_collection_schema():
