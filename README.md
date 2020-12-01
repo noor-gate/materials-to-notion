@@ -15,4 +15,5 @@ Creates a Notion page for each course with all the course materials on it, organ
     - If you are using Chrome, click the padlock to the left of the url, then cookies, then the dropdown titled "www.notion.so", then the cookies folder, then copy the content from token_v2.
   - Run `python3 main.py`
  
- 
+## Example 
+![Example](https://github.com/noor-gate/materials-to-notion/blob/main/images/screenshot.png?raw=true)
