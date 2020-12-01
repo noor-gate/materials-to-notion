@@ -11,12 +11,11 @@ def get_page_and_client():
     page = client.get_block(url)
     return page, client     
 
-def get_details():
+def set_details():
     os.environ['IC_USER'] = input("Imperial Shortcode: ");
     os.environ['IC_PASSWORD'] = getpass.getpass("Password: ");
 
 def get_access_token():
-    get_details()
     USER = os.getenv('IC_USER')
     PASSWORD = os.getenv('IC_PASSWORD')
     response = requests.post('https://api-materials.doc.ic.ac.uk/auth/login', json={'username':USER, 'password':PASSWORD})
@@ -94,6 +93,7 @@ def get_collection_schema():
 
 
 def add_subpages():
+    set_details()
     page, client = get_page_and_client()
     courses = get_courses()
     for course in courses:
