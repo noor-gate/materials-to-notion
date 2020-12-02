@@ -1,5 +1,5 @@
-from notion.client import * 
-from notion.block import * 
+from notion.client import *
+from notion.block import *
 import os
 import getpass
 import requests
@@ -9,11 +9,11 @@ def get_page_and_client():
     url = input("Enter Notion page URL: ")
     client = NotionClient(token_v2=token_v2)
     page = client.get_block(url)
-    return page, client     
+    return page, client
 
 def set_details():
-    os.environ['IC_USER'] = input("Imperial Shortcode: ");
-    os.environ['IC_PASSWORD'] = getpass.getpass("Password: ");
+    os.environ['IC_USER'] = input("Imperial Shortcode: ")
+    os.environ['IC_PASSWORD'] = getpass.getpass("Password: ")
 
 def get_access_token():
     USER = os.getenv('IC_USER')
@@ -82,11 +82,8 @@ def get_collection_schema():
                     "id": "002c7016-ac57-413a-90a6-64afadfb0c4a",
                     "value": "Code",
                 },
-
-                
                 ],
-       },
-        
+        },
         "OBcJ": {"name": "Link", "type": "url"},
         "title": {"name": "Name", "type": "title"},
     }
@@ -114,16 +111,16 @@ def add_materials(cvb, code):
         path = material['path']
         options = []
         schema = get_collection_schema()
-        for option in (schema["=d{|"])['options']:            
+        for option in (schema["=d{|"])['options']:
             options.append(option['value'])
 
-        if tags != []:            
+        if tags != []:
             valid_tags = []
             for tag in tags:
                 if tag.title() in options:
                     valid_tags.append(tag)
-            tags = valid_tags        
-        else:            
+            tags = valid_tags
+        else:
             if "panopto" in path:
                 tags.append("Lecture")
                 tags.append("Video")
@@ -141,10 +138,10 @@ def add_materials(cvb, code):
         row.category = tags 
         category = material['category']
         index = material['index']
-        start = material['path'][:4] 
+        start = material['path'][:4]
         if start != "http":
             row.link = ("https://materials.doc.ic.ac.uk/view/2021/" + code + "/" + category + "/" + str(index)).replace(" ", "%20")
         else:
-            row.link = material['path']  
+            row.link = material['path']
 
 
