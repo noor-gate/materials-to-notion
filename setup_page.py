@@ -1,9 +1,19 @@
-from notion.client import * 
-from notion.block import * 
+from notion.client import *
+from notion.block import *
 import os
 import getpass
 import requests
-from concurrent.futures import ThreadPoolExecutor
+
+def get_page_and_client():
+    token_v2 = input("Enter token_v2: ")
+    url = input("Enter Notion page URL: ")
+    client = NotionClient(token_v2=token_v2)
+    page = client.get_block(url)
+    return page, client
+
+def set_details():
+    os.environ['IC_USER'] = input("Imperial Shortcode: ")
+    os.environ['IC_PASSWORD'] = getpass.getpass("Password: ")
 
 def get_access_token():
     USER = os.getenv('IC_USER')
@@ -11,31 +21,18 @@ def get_access_token():
     response = requests.post('https://api-materials.doc.ic.ac.uk/auth/login', json={'username':USER, 'password':PASSWORD})
     return response.json()['access_token']
 
-
-def get_page_and_client():
-    token_v2 = input("Enter token_v2: ")
-    url = input("Enter Notion page URL: ")
-    client = NotionClient(token_v2=token_v2)
-    page = client.get_block(url)
-    return page, client     
-
-def set_details():
-    os.environ['IC_USER'] = input("Imperial Shortcode: ");
-    os.environ['IC_PASSWORD'] = getpass.getpass("Password: ");
-
-
-def get_courses(access_token):
+def get_courses():
     url = "https://api-materials.doc.ic.ac.uk/courses/2021"
     headers = {}
     headers["Accept"] = "application/json"
-    headers["Authorization"] = "Bearer " + access_token
+    headers["Authorization"] = "Bearer " + get_access_token()
     return requests.get(url, headers=headers).json()
 
-def get_materials(code, access_token):
+def get_materials(code):
     url = "https://api-materials.doc.ic.ac.uk/resources?year=2021&course=" + code
     headers = {}
     headers["Accept"] = "application/json"
-    headers["Authorization"] = "Bearer " + access_token
+    headers["Authorization"] = "Bearer " + get_access_token()
     return requests.get(url, headers=headers).json()
 
 def get_collection_schema():
@@ -85,28 +82,27 @@ def get_collection_schema():
                     "id": "002c7016-ac57-413a-90a6-64afadfb0c4a",
                     "value": "Code",
                 },
-
-                
                 ],
-       },
-        
+        },
         "OBcJ": {"name": "Link", "type": "url"},
         "title": {"name": "Name", "type": "title"},
     }
 
 
+def add_subpages():
+    set_details()
+    page, client = get_page_and_client()
+    courses = get_courses()
+    for course in courses:
+        cvb = page.children.add_new(CollectionViewPageBlock, icon="x")
+        cvb.collection = client.get_collection(
+        client.create_record("collection", parent=cvb, schema=get_collection_schema()))
+        cvb.title = course['title']
+        view = cvb.views.add_new(view_type="table") 
+        add_materials(cvb, course['code'])
 
-def add_course(course):
-    cvb = page.children.add_new(CollectionViewPageBlock, icon="x")
-    cvb.collection = client.get_collection(
-    client.create_record("collection", parent=cvb, schema=get_collection_schema()))
-    cvb.title = course['title']
-    view = cvb.views.add_new(view_type="table") 
-    add_materials(cvb, course['code'], access_token)
-
-
-def add_materials(cvb, code, access_token):
-    materials = get_materials(code, access_token)
+def add_materials(cvb, code):
+    materials = get_materials(code)
     for material in materials:
         row = cvb.collection.add_row()
         title = material['title']
@@ -115,16 +111,16 @@ def add_materials(cvb, code, access_token):
         path = material['path']
         options = []
         schema = get_collection_schema()
-        for option in (schema["=d{|"])['options']:            
+        for option in (schema["=d{|"])['options']:
             options.append(option['value'])
 
-        if tags != []:            
+        if tags != []:
             valid_tags = []
             for tag in tags:
                 if tag.title() in options:
                     valid_tags.append(tag)
-            tags = valid_tags        
-        else:            
+            tags = valid_tags
+        else:
             if "panopto" in path:
                 tags.append("Lecture")
                 tags.append("Video")
@@ -142,18 +138,10 @@ def add_materials(cvb, code, access_token):
         row.category = tags 
         category = material['category']
         index = material['index']
-        start = material['path'][:4] 
+        start = material['path'][:4]
         if start != "http":
             row.link = ("https://materials.doc.ic.ac.uk/view/2021/" + code + "/" + category + "/" + str(index)).replace(" ", "%20")
         else:
-            row.link = material['path'] 
+            row.link = material['path']
 
 
-
-set_details()
-page, client = get_page_and_client()
-access_token = get_access_token()
-courses = get_courses(access_token)
-
-with ThreadPoolExecutor(max_workers=20) as pool: 
-    pool.map(add_course, courses)
