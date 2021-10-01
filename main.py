@@ -5,12 +5,12 @@ import getpass
 import requests
 from concurrent.futures import ThreadPoolExecutor
 
+# Get access token from API
 def get_access_token():
     USER = os.getenv('IC_USER')
     PASSWORD = os.getenv('IC_PASSWORD')
     response = requests.post('https://api-materials.doc.ic.ac.uk/auth/login', json={'username':USER, 'password':PASSWORD})
     return response.json()['access_token']
-
 
 def get_page_and_client():
     token_v2 = input("Enter token_v2: ")
@@ -19,10 +19,10 @@ def get_page_and_client():
     page = client.get_block(url)
     return page, client     
 
+# Set details in environment
 def set_details():
     os.environ['IC_USER'] = input("Imperial Shortcode: ");
     os.environ['IC_PASSWORD'] = getpass.getpass("Password: ");
-
 
 def get_courses(access_token):
     url = "https://api-materials.doc.ic.ac.uk/courses/2021"
@@ -94,8 +94,6 @@ def get_collection_schema():
         "title": {"name": "Name", "type": "title"},
     }
 
-
-
 def add_course(course):
     cvb = page.children.add_new(CollectionViewPageBlock, icon="x")
     cvb.collection = client.get_collection(
@@ -103,7 +101,6 @@ def add_course(course):
     cvb.title = course['title']
     view = cvb.views.add_new(view_type="table") 
     add_materials(cvb, course['code'], access_token)
-
 
 def add_materials(cvb, code, access_token):
     materials = get_materials(code, access_token)
@@ -148,12 +145,13 @@ def add_materials(cvb, code, access_token):
         else:
             row.link = material['path'] 
 
-
-
+# Enter details
 set_details()
+# Load Notion API
 page, client = get_page_and_client()
 access_token = get_access_token()
+# Load courses
 courses = get_courses(access_token)
-
+# Using threads
 with ThreadPoolExecutor(max_workers=20) as pool: 
     pool.map(add_course, courses)
